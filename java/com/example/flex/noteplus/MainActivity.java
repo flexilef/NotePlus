@@ -15,15 +15,17 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SaveAsDialogFragment.SaveAsDialogEditListener{
 
     private static final String TAG = "MyActivity";
 
-    private File root;
-    private File notePlusDir;
+    String filenameCurrent;
+    String filepathCurrent;
+    boolean changesMade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +33,13 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        root = Environment.getExternalStorageDirectory();
-        notePlusDir = new File(root.getAbsolutePath() + "/NotePlus");
+        File root = Environment.getExternalStorageDirectory();
+        File notePlusDir = new File(root.getAbsolutePath() + "/NotePlus");
         notePlusDir.mkdirs();
+
+        filenameCurrent = "untitled.txt";
+        filepathCurrent = notePlusDir.getAbsolutePath();
+        setTitle("NotePlus - " + filenameCurrent);
     }
 
     @Override
@@ -58,8 +64,31 @@ public class MainActivity extends AppCompatActivity {
         {
             showSaveAsDialog();
         }
+        else if(id == R.id.action_new)
+        {
+            clearEditTextBody();
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onFinishEditDialog(String name, String path)
+    {
+        EditText editTextBody = (EditText) findViewById(R.id.edit_body);
+        String textToSave = editTextBody.getText().toString();
+
+        Log.e("save_as_dialog", "filename: " + name);
+        Log.e("save_as_dialog", "pathname: " + path);
+
+        saveAs(name, path, textToSave);
+    }
+
+    private void clearEditTextBody() {
+        //check if we want to save first
+        //if not then
+        //clear
+        EditText editTextBody = (EditText) findViewById(R.id.edit_body);
+        editTextBody.setText("");
     }
 
     private void showSaveAsDialog()
@@ -68,59 +97,29 @@ public class MainActivity extends AppCompatActivity {
         newFragment.show(getSupportFragmentManager(), "dialog_save_as");
     }
 
-    public void dialogSaveAsDoPositiveClick(Dialog dialog)
-    {
-        EditText editTextFile = (EditText) dialog.findViewById(R.id.edit_text_filename);
-        EditText editTextPath = (EditText) dialog.findViewById(R.id.edit_text_location);
-        EditText editTextBody = (EditText) findViewById(R.id.edit_body);
-
-        String saveFileName = editTextFile.getText().toString();
-        String saveFileLocation = editTextPath.getText().toString();
-        String textToSave = editTextBody.getText().toString();
-
-        Context context = getApplicationContext();
-        int duration = Toast.LENGTH_SHORT;
-
-        if("".equals(saveFileName))
-        {
-            Toast toast = Toast.makeText(context, "Invalid Filename!", duration);
-            toast.show();
-            Log.e("save_as_dialog", "Empty name: " + saveFileName);
-        }
-        else if("".equals(saveFileLocation))
-        {
-            Toast toast = Toast.makeText(context, "Invalid Path!", duration);
-            toast.show();
-            Log.e("save_as_dialog", "Empty loc: " + saveFileLocation);
-        }
-        else
-        {
-            Log.e("save_as_dialog", "filename: " + saveFileName);
-            Log.e("save_as_dialog", "pathname: " + saveFileLocation);
-
-            saveAs(saveFileName, saveFileLocation, textToSave);
-        }
-    }
-
-    public void dialogSaveAsDoNegativeClick(Dialog dialog)
-    {
-        dialog.cancel();
-    }
-
     private void saveAs(String filename, String path, String text)
     {
         Context context = getApplicationContext();
         int duration = Toast.LENGTH_SHORT;
+        boolean success = true;
 
         FileWriter outputStream = null;
+        File location = new File(path);
+        if(!location.mkdirs())
+            location.mkdirs();
+
         File file = new File(path, filename);
 
         try {
             outputStream = new FileWriter(file);
             outputStream.write(text);
         }
-        catch (IOException e)
+       catch(IOException e)
         {
+            success = false;
+            Toast saveErrorToast = Toast.makeText(context, "Save Failed!", duration);
+            saveErrorToast.show();
+
             e.printStackTrace();
             Log.e("", "Error writing: \nfilename: " + filename + "\nlocation: " + path);
         }
@@ -129,15 +128,21 @@ public class MainActivity extends AppCompatActivity {
             try {
                 if(outputStream != null)
                     outputStream.close();
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 e.printStackTrace();
-                Log.e("", "Error closing!");
+                Log.e("", "Error closing: \nfilename: " + filename + "\nlocation: " + path);
             }
         }
 
-        Toast toastSaved = Toast.makeText(context, "Saved", duration);
-        toastSaved.show();
+        if(success)
+        {
+            Toast toastSaved = Toast.makeText(context, "Saved", duration);
+            toastSaved.show();
+            filenameCurrent = filename;
+            setTitle("NotePlus - " + filenameCurrent);
+        }
     }
 
     private boolean isExternalStorageWriteable()

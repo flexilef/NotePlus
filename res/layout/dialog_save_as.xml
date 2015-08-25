@@ -4,8 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:weightSum="1"
-    android:measureWithLargestChild="false"
-    android:outlineProvider="paddedBounds">
+    >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Filename:"
+        android:textColor="@android:color/white"
+        />
 
     <EditText
         android:id="@+id/edit_text_filename"
@@ -18,8 +28,19 @@
         android:background="@android:color/white"
         android:hint="Enter filename..."
         android:singleLine="true"
-
         />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Location Path:"
+        android:textColor="@android:color/white"
+        />
+
     <EditText
         android:id="@+id/edit_text_location"
         android:layout_width="match_parent"
@@ -31,5 +52,6 @@
         android:background="@android:color/white"
         android:hint="Enter location path..."
         android:singleLine="true"
-        android:elegantTextHeight="true" />
+        />
+
 </LinearLayout>
